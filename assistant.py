@@ -2,7 +2,12 @@ from collections import UserDict
 
 class Field:
     def __init__(self, value):
+        if not self.is_valid(value):
+            raise ValueError()
         self.value = value
+    
+    def is_valid(self, value):
+        return True
 
     def __str__(self):
         return str(self.value)
@@ -11,48 +16,53 @@ class Name(Field):
 	pass
 
 class Phone(Field):
-    pass
-    def __init__(self, value):
-        if len(value) == 10 and value.isdigit():
-            super().__init__(value)
-        else:
-            raise ValueError("Невірний формат номеру. Повинно бут 10 символів")
+    def is_valid(self, value):
+        return len(value) == 10 and value.isdigit()
 
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
 
-    def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
-
     def add_phone(self, number):
-        self.phones.append(Phone(number))
-
-    def remove_phone(self, number):
-        for phone in self.phones:
-            if phone.value == number:
-                self.phones.remove(phone)
-
-    def edit_phone(self, old_number, new_number):
-        for phone in self.phones:
-            if phone.value == old_number:
-                phone.value = new_number
+        phone = Phone(number)
+        self.phones.append(phone)
+        return phone
 
     def find_phone(self, number):
         for phone in self.phones:
             if phone.value == number:
-                return phone.value
+                return phone
+            
+    def remove_phone(self, number):
+        phone = self.find_phone(number)
+        if not phone:
+            raise ValueError()
+        self.phones.remove(phone)
+
+    def edit_phone(self, old_number, new_number):
+        phone = self.find_phone(old_number)
+        if not phone:
+            raise ValueError()
+        self.add_phone(new_number)
+        self.remove_phone(old_number)
+
+    def __str__(self):
+        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
 class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
+        return record
 
     def find(self, name):
         return self.data.get(name)
     
     def delete(self, name):
         self.data.pop(name)
+
+    def __str__(self) -> str:
+        return "\n".join(str(record) for record in self.data.values)
 
 """ book = AddressBook()
 
